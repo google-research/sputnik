@@ -5,8 +5,8 @@ project(SPUTNIK CUDA CXX C)
 ##
 ### Build options.
 ##
-option(BUILD_TEST "Build test suite" ON)
-option(BUILD_BENCHMARK "Build benchmark suite" ON)
+option(BUILD_TEST "Build test suite" OFF)
+option(BUILD_BENCHMARK "Build benchmark suite" OFF)
 
 ##
 ### Handle Dependencies.
