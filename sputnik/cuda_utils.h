@@ -49,7 +49,7 @@ struct __align__(16) short8 {
 #define CUDA_CALL(code)                                     \
   do {                                                      \
     cudaError_t status = code;                              \
-    string err = cudaGetErrorString(status);                \
+    std::string err = cudaGetErrorString(status);           \
     CHECK_EQ(status, cudaSuccess) << "CUDA Error: " << err; \
   } while (0)
 
