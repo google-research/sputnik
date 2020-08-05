@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 project(SPUTNIK CUDA CXX C)
+set(CUDA_ARCHITECTURES OFF)
 
 ##
 ### Build options.
@@ -22,10 +23,8 @@ include(cmake/Dependencies.cmake)
 # Requires C++11.
 set(CMAKE_CXX_STANDARD 11)
 
-message("CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
-message("CMAKE_CUDA_FLAGS_RELEASE is ${CMAKE_CUDA_FLAGS_RELEASE}")
-# set(CMAKE_CXX_FLAGS_RELEASE "-O2 -NDEBUG")
-# set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS_RELEASE}")
+create_cuda_gencode_flags(CUDA_GENCODE_FLAGS ${CUDA_ARCHS})
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${CUDA_GENCODE_FLAGS}")
 
 ##
 ### Project build.
