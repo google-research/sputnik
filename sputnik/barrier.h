@@ -20,6 +20,8 @@
  * dependent threads.
  */
 
+#include <cstdint>
+
 namespace sputnik {
 
 /**

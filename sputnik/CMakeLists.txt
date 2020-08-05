@@ -5,6 +5,10 @@ set(SPUTNIK_SPMM_TEST_SRCS)
 set(SPUTNIK_SPMM_BENCHMARK_SRCS)
 add_subdirectory(spmm)
 
+set(SPUTNIK_SDDMM_TEST_SRCS)
+set(SPUTNIK_SDDMM_BENCHMARK_SRCS)
+add_subdirectory(sddmm)
+
 set(DIR_SRCS)
 
 ##
@@ -60,6 +64,15 @@ if (BUILD_TEST)
   set_source_files_properties(${SPUTNIK_SPMM_TEST_CUDA_SRCS} PROPERTIES LANGUAGE CUDA)  
   add_executable(spmm_test ${SPUTNIK_SPMM_TEST_SRCS})
   target_link_libraries(spmm_test sputnik ${SPUTNIK_TEST_LIBS})
+
+  # SDDMM test build.
+  list(APPEND SPUTNIK_SDDMM_TEST_SRCS ${SPUTNIK_TEST_SRCS})
+  
+  set(SPUTNIK_SDDMM_TEST_CUDA_SRCS ${SPUTNIK_SDDMM_TEST_SRCS})
+  list(FILTER SPUTNIK_SDDMM_TEST_CUDA_SRCS INCLUDE REGEX "\.cu\.cc")
+  set_source_files_properties(${SPUTNIK_SDDMM_TEST_CUDA_SRCS} PROPERTIES LANGUAGE CUDA)  
+  add_executable(sddmm_test ${SPUTNIK_SDDMM_TEST_SRCS})
+  target_link_libraries(sddmm_test sputnik ${SPUTNIK_TEST_LIBS})  
 endif()
 
 # Optionally build the benchmark suite.
@@ -75,4 +88,13 @@ if (BUILD_BENCHMARK)
   set_source_files_properties(${SPUTNIK_SPMM_BENCHMARK_CUDA_SRCS} PROPERTIES LANGUAGE CUDA)  
   add_executable(spmm_benchmark ${SPUTNIK_SPMM_BENCHMARK_SRCS})
   target_link_libraries(spmm_benchmark sputnik ${SPUTNIK_BENCHMARK_LIBS})
+
+  # SDDMM benchmark build.
+  list(APPEND SPUTNIK_SDDMM_BENCHMARK_SRCS ${SPUTNIK_BENCHMARK_SRCS})
+  
+  set(SPUTNIK_SDDMM_BENCHMARK_CUDA_SRCS ${SPUTNIK_SDDMM_BENCHMARK_SRCS})
+  list(FILTER SPUTNIK_SDDMM_BENCHMARK_CUDA_SRCS INCLUDE REGEX "\.cu\.cc")
+  set_source_files_properties(${SPUTNIK_SDDMM_BENCHMARK_CUDA_SRCS} PROPERTIES LANGUAGE CUDA)  
+  add_executable(sddmm_benchmark ${SPUTNIK_SDDMM_BENCHMARK_SRCS})
+  target_link_libraries(sddmm_benchmark sputnik ${SPUTNIK_BENCHMARK_LIBS})  
 endif()
