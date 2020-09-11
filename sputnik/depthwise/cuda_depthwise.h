@@ -20,33 +20,37 @@
 namespace sputnik {
 
 cudaError_t CudaDepthwise(int n, int c, int h, int w,
-                          const float* __restrict__ in, int kernel_size,
-                          int padding, int stride,
+                          const float* __restrict__ in,
+                          int kernel_size, int padding, int stride,
                           const float* __restrict__ filters,
-                          float* __restrict__ out, cudaStream_t stream);
+                          float* __restrict__ out,
+                          cudaStream_t stream);
 
 cudaError_t CudaDepthwiseBiasRelu(int n, int c, int h, int w,
-                                  const float* __restrict__ in, int kernel_size,
-                                  int padding, int stride,
+                                  const float* __restrict__ in,
+                                  int kernel_size, int padding, int stride,
                                   const float* __restrict__ filters,
                                   const float* __restrict__ bias,
-                                  float* __restrict__ out, cudaStream_t stream);
+                                  float* __restrict__ out,
+                                  cudaStream_t stream);
 
 template <int kBlockItemsX, int kBlockItemsY, int kThreadItemsX,
           int kThreadItemsY>
 cudaError_t CudaDepthwiseEx(int n, int c, int h, int w,
-                            const float* __restrict__ in, int kernel_size,
-                            int padding, int stride,
+                            const float* __restrict__ in,
+                            int kernel_size, int padding, int stride,
                             const float* __restrict__ filters,
                             const float* __restrict__ bias,
-                            float* __restrict__ out, cudaStream_t stream);
+                            float* __restrict__ out,
+                            cudaStream_t stream);
 
 template <typename Config>
 cudaError_t CudaDepthwiseEx(int n, int c, int h, int w,
                             const float* __restrict__ in,
                             const float* __restrict__ filters,
                             const float* __restrict__ bias,
-                            float* __restrict__ out, cudaStream_t stream);
+                            float* __restrict__ out,
+                            cudaStream_t stream);
 
 }  // namespace sputnik
 

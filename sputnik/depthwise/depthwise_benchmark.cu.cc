@@ -12,19 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <functional>
+#include <cstdint>
 
 #include "sputnik/cuda_utils.h"
 #include "sputnik/depthwise/cuda_depthwise.h"
 #include "sputnik/depthwise/depthwise_config.h"
 #include "sputnik/matrix_utils.h"
-#include "benchmark/benchmark.h"
+#include "sputnik/test_utils.h"
+
 #include "absl/random/random.h"
+#include "benchmark/include/benchmark/benchmark.h"
 
 namespace sputnik {
 
-void BenchmarkArgs(testing::Benchmark* b) {
-  const std::vector<std::vector<int>> benchmarks = {
+void ReportThroughput(benchmark::State& state) {
+  const int kDimN = state.range(0);
+  const int kDimC = state.range(1);
+  const int kDimH = state.range(2);
+  const int kDimW = state.range(3);
+  const int kKernelSize = state.range(4);
+  const int kPadding = state.range(5);
+  const int kStride = state.range(6);
+
+  // Output spatial dimensions.
+  const int kDimOutH = (kDimH - kKernelSize + 2 * kPadding) / kStride + 1;
+  const int kDimOutW = (kDimW - kKernelSize + 2 * kPadding) / kStride + 1;
+
+  const int kFlopsPerIteration = kKernelSize * kKernelSize *
+                                 kDimOutH * kDimOutW *
+                                 kDimN * kDimC * 2;
+  state.SetBytesProcessed(
+      static_cast<int64_t>(state.iterations()) *
+      kFlopsPerIteration);
+}
+
+void BenchmarkArgs(benchmark::internal::Benchmark* b) {
+  const std::vector<std::vector<int64_t>> benchmarks = {
       // TVM benchmark.
       {1, 256, 96, 96, 3, 1, 1},
       // MobileNetV1 width 1.8
@@ -92,19 +115,7 @@ void BenchmarkArgs(testing::Benchmark* b) {
   for (const auto& a : benchmarks) b->Args(a);
 }
 
-void LogBenchmarkArguments(const benchmark::State& state) {
-  LOG(INFO) << "Benchmark Arguments: "
-            << "n=" << state.range(0) << ","
-            << "c=" << state.range(1) << ","
-            << "h=" << state.range(2) << ","
-            << "w=" << state.range(3) << ","
-            << "k=" << state.range(4) << ","
-            << "p=" << state.range(5) << ","
-            << "s=" << state.range(6);
-}
-
-void BM_CudaDepthwise(benchmark::State& state) {
-  BenchmarkUseRealTime();
+void BM_CudaDepthwise_GenericFloat(benchmark::State& state) {
   const int kDimN = state.range(0);
   const int kDimC = state.range(1);
   const int kDimH = state.range(2);
@@ -135,84 +146,9 @@ void BM_CudaDepthwise(benchmark::State& state) {
     }
     CUDA_CALL(cudaStreamSynchronize(/*stream=*/0));
   }
-  LogBenchmarkArguments(state);
+  ReportThroughput(state);
 }
 
-BENCHMARK(BM_CudaDepthwise)->Apply(BenchmarkArgs);
-
-typedef std::function<cudaError_t(int, int, int, int, const float*, int, int,
-                                  int, const float*, const float*, float*,
-                                  cudaStream_t)>
-    DepthwiseFn;
-
-void BenchmarkFn(const DepthwiseFn kFn, benchmark::State& state) {
-  BenchmarkUseRealTime();
-  const int kDimN = state.range(0);
-  const int kDimC = state.range(1);
-  const int kDimH = state.range(2);
-  const int kDimW = state.range(3);
-  const int kKernelSize = state.range(4);
-  const int kPadding = state.range(5);
-  const int kStride = state.range(6);
-
-  // Output spatial dimensions.
-  const int kDimOutH = (kDimH - kKernelSize + 2 * kPadding) / kStride + 1;
-  const int kDimOutW = (kDimW - kKernelSize + 2 * kPadding) / kStride + 1;
-
-  // We currently don't predicate on the input loads, so to be safe we
-  // just allocate way off the end.
-  const int kInputMult = 2;
-
-  absl::BitGen generator;
-  CudaMatrix<float> in(kDimN * kDimC, kDimH * kDimW * kInputMult, &generator);
-  CudaMatrix<float> filters(kDimC, kKernelSize * kKernelSize, &generator);
-  CudaMatrix<float> out(kDimN * kDimC, kDimOutH * kDimOutW, &generator);
-
-  int batch_size = 10;
-  while (state.KeepRunningBatch(batch_size)) {
-    for (int i = 0; i < batch_size; ++i) {
-      CUDA_CALL(kFn(kDimN, kDimC, kDimH, kDimW, in.Values(), kKernelSize,
-                    kPadding, kStride, filters.Values(),
-                    /*bias=*/nullptr, out.Values(), /*stream=*/0));
-    }
-    CUDA_CALL(cudaStreamSynchronize(/*stream=*/0));
-  }
-  LogBenchmarkArguments(state);
-}
-
-#define CONCAT_(x, y) x##y
-#define CONCAT(x, y) CONCAT_(x, y)
-#define ANONYMOUS_NAME(x) CONCAT(x, __COUNTER__)
-
-#define REGISTER_BENCHMARK(name, fn)                                  \
-  void BM_##name(benchmark::State& state) { BenchmarkFn(fn, state); } \
-  BENCHMARK(BM_##name)->Apply(BenchmarkArgs)
-
-#define REGISTER_BENCHMARK_HELPER(tname, fn, bx, by, tx, ty) \
-  const auto& tname = fn<bx, by, tx, ty>;                    \
-  REGISTER_BENCHMARK(fn##_##bx##x##by##x##tx##x##ty, tname);
-
-#define REGISTER_TILED_BENCHMARK(fn, bx, by, tx, ty) \
-  REGISTER_BENCHMARK_HELPER(ANONYMOUS_NAME(dwise), fn, bx, by, tx, ty);
-
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 64, 64, 8, 8);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 64, 64, 4, 8);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 64, 64, 4, 4);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 32, 32, 4, 8);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 32, 32, 4, 4);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 32, 32, 4, 2);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 32, 32, 2, 2);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 16, 16, 4, 2);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 16, 16, 2, 4);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 16, 16, 2, 2);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 8, 8, 2, 1);
-REGISTER_TILED_BENCHMARK(CudaDepthwiseEx, 8, 8, 1, 2);
-
-#undef REGISTER_TILED_BENCHMARK
-#undef REGISTER_TILED_BENCHMARK_HELPER
-#undef REGISTER_BENCHMARK
-#undef CONCAT_
-#undef CONCAT
-#undef ANONYMOUS_NAME
+BENCHMARK(BM_CudaDepthwise_GenericFloat)->Apply(BenchmarkArgs)->UseRealTime();
 
 }  // namespace sputnik

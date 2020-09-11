@@ -12,33 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef THIRD_PARTY_SPUTNIK_CUDA_UTILS_H_
-#define THIRD_PARTY_SPUTNIK_CUDA_UTILS_H_
+#ifndef THIRD_PARTY_SPUTNIK_SPUTNIK_H_
+#define THIRD_PARTY_SPUTNIK_SPUTNIK_H_
 
-#include <cuda_fp16.h>
-#include <cuda_runtime.h>
+#include "sputnik/bias_relu/bias_relu.h"
+#include "sputnik/depthwise/cuda_depthwise.h"
+#include "sputnik/sddmm/cuda_sddmm.h"
+#include "sputnik/softmax/softmax.h"
+#include "sputnik/softmax/sparse_softmax.h"
+#include "sputnik/spmm/cuda_spmm.h"
+#include "sputnik/utils/index_format.h"
 
-namespace sputnik {
-
-typedef __half half;
-typedef __half2 half2;
-
-struct __align__(8) half4 {
-  half2 x, y;
-};
-
-struct __align__(16) half8 {
-  half2 x, y, z, w;
-};
-
-struct __align__(8) short4 {
-  short2 x, y;
-};
-
-struct __align__(16) short8 {
-  short2 x, y, z, w;
-};
-
-}  // namespace sputnik
-
-#endif  // THIRD_PARTY_SPUTNIK_CUDA_UTILS_H_
+#endif  // THIRD_PARTY_SPUTNIK_SPUTNIK_H_

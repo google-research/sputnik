@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <math.h>
-
+#include <cmath>
+#include <string>
 #include <unordered_map>
 
 #include "sputnik/barrier.h"
@@ -29,7 +29,6 @@
 #include "sputnik/spmm/spmm_config.h"
 #include "sputnik/tiling_utils.h"
 #include "sputnik/vector_utils.h"
-#include "absl/strings/str_format.h"
 
 namespace sputnik {
 
@@ -41,36 +40,57 @@ struct SpmmKernel {
   /// Shortcuts for commonly used specialized types.
   //
 
-  typedef TilingUtils<Config::kBlockItemsY, Config::kBlockItemsK,
-                      Config::kBlockItemsX>
+  typedef TilingUtils<
+      Config::kBlockItemsY,
+      Config::kBlockItemsK,
+      Config::kBlockItemsX>
       Tiling;
 
-  typedef PredicateVector<Config::kThreadItemsX> PredicateVector;
+  typedef PredicateVector<
+      Config::kThreadItemsX>
+      PredicateVector;
 
-  typedef PredicatesN<typename Config::DenseValue, Config::kBlockItemsX,
-                      Config::kBlockWidth>
+  typedef PredicatesN<
+      typename Config::DenseValue,
+      Config::kBlockItemsX,
+      Config::kBlockWidth>
       PredicatesN;
 
-  typedef MemoryAligner<typename Config::SparseValue, Config::kBlockWidth>
+  typedef MemoryAligner<
+      typename Config::SparseValue,
+      Config::kBlockWidth>
       MemoryAligner;
 
-  typedef SparseTile<typename Config::SparseValue, Config::kBlockItemsK,
-                     Config::kBlockWidth>
+  typedef SparseTile<
+      typename Config::SparseValue,
+      Config::kBlockItemsK,
+      Config::kBlockWidth>
       SparseTile;
 
-  typedef DenseTile<typename Config::DenseValue, Config::kBlockItemsK,
-                    Config::kBlockItemsX, Config::kBlockWidth,
-                    Config::kResidueUnroll>
+  typedef DenseTile<
+      typename Config::DenseValue,
+      Config::kBlockItemsK,
+      Config::kBlockItemsX,
+      Config::kBlockWidth,
+      Config::kResidueUnroll>
       DenseTile;
 
-  typedef ComputeUtils<typename Config::DenseValue, Config::kBlockItemsK,
-                       Config::kBlockItemsX, Config::kBlockWidth>
+  typedef ComputeUtils<
+      typename Config::DenseValue,
+      Config::kBlockItemsK,
+      Config::kBlockItemsX,
+      Config::kBlockWidth>
       Computer;
 
-  typedef Barrier<Config::kBlockItemsY, Config::kBlockWidth> Barrier;
+  typedef Barrier<
+      Config::kBlockItemsY,
+      Config::kBlockWidth>
+      Barrier;
 
-  typedef OutputTile<typename Config::DenseValue, Config::kBlockItemsX,
-                     Config::kBlockWidth>
+  typedef OutputTile<
+      typename Config::DenseValue,
+      Config::kBlockItemsX,
+      Config::kBlockWidth>
       OutputTile;
 
   typedef typename Config::ScalarValue ScalarValue;
@@ -310,7 +330,9 @@ using FloatTable = std::unordered_map<std::string, FloatSpmmFn>;
 
 std::string MakeHandle(int m, int k, int n, int nonzeros) {
   // NOTE: We don't include the number of nonzeros currently.
-  return absl::StrFormat("%d_%d_%d", m, k, n);
+  return std::to_string(m) + "_" +
+      std::to_string(k) + "_" +
+      std::to_string(n);
 }
 
 FloatTable* GetFloatTable() {
@@ -579,6 +601,7 @@ cudaError_t CudaSpmmEx(
       int, int, int, int, const int*, const float*, const int*, const int*, \
       const float*, const float*, float*, cudaStream_t);
 
+#ifdef SPUTNIK_BUILD_TEST
 /* 1-d tiling with blocksize 64 */
 INSTANTIATE_TILED_FLOAT(CudaSpmmEx, float, float, 1, 32, 64, 32);
 
@@ -619,6 +642,7 @@ INSTANTIATE_TILED_FLOAT(CudaSpmmEx, float2, float2, 8, 32, 8, 4);
 INSTANTIATE_TILED_FLOAT(CudaSpmmEx, float4, float4, 16, 32, 8, 2);
 INSTANTIATE_TILED_FLOAT(CudaSpmmEx, float4, float2, 8, 32, 8, 4);
 INSTANTIATE_TILED_FLOAT(CudaSpmmEx, float4, float, 4, 32, 8, 8);
+#endif  // SPUTNIK_BUILD_TEST
 
 #undef INSTANTIATE_TILED_FLOAT
 
@@ -627,6 +651,7 @@ INSTANTIATE_TILED_FLOAT(CudaSpmmEx, float4, float, 4, 32, 8, 8);
       int, int, int, int, const int*, const half2*, const int*, const short2*, \
       const half2*, const float*, half2*, cudaStream_t);
 
+#ifdef SPUTNIK_BUILD_TEST
 /* 1-d tiling with blocksize 64 */
 INSTANTIATE_TILED_HALF(CudaSpmmEx, half2, half2, 1, 32, 64, 32);
 
@@ -652,6 +677,7 @@ INSTANTIATE_TILED_HALF(CudaSpmmEx, half4, half4, 8, 32, 8, 4);
 INSTANTIATE_TILED_HALF(CudaSpmmEx, half8, half8, 16, 32, 8, 2);
 INSTANTIATE_TILED_HALF(CudaSpmmEx, half8, half4, 8, 32, 8, 4);
 INSTANTIATE_TILED_HALF(CudaSpmmEx, half8, half2, 4, 32, 8, 8);
+#endif  // SPUTNIK_BUILD_TEST
 
 #undef INSTANTIATE_TILED_HALF
 }  // namespace sputnik

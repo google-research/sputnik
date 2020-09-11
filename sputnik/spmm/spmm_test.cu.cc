@@ -18,6 +18,8 @@
 #include "sputnik/matrix_utils.h"
 #include "sputnik/spmm/cuda_spmm.h"
 #include "sputnik/spmm/spmm_config.h"
+#include "sputnik/test_utils.h"
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/random/random.h"
@@ -75,11 +77,15 @@ class SpmmTest : public ::testing::Test {
 // variants of the kernel the N dim must be a multiple of 8/4
 // respectively. All of our test cases meet these criteria.
 typedef ::testing::Types<
-    Problem<4, 32, 32, 32>, Problem<4, 32, 48, 128>, Problem<7, 96, 40, 333>,
-    Problem<11, 55, 8, 293>, Problem<4, 128, 128, 512>,
+    Problem<4, 32, 32, 32>,
+    Problem<4, 32, 48, 128>,
+    Problem<7, 96, 40, 333>,
+    Problem<11, 55, 8, 293>,
+    Problem<4, 128, 128, 512>,
     Problem<64, 512, 512, 16384>,
     /* Some actualy problem sizes that we benchmark */
-    Problem<1024, 1024, 512, 131072>, Problem<1024, 1024, 256, 131072>,
+    Problem<1024, 1024, 512, 131072>,
+    Problem<1024, 1024, 256, 131072>,
     Problem<1024, 1024, 128, 131072>,
     /* Some more problems we commonly benchmark */
     Problem<2048, 2048, 128, 1024 * 1024>,

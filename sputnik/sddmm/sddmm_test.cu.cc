@@ -17,6 +17,8 @@
 #include "sputnik/cuda_utils.h"
 #include "sputnik/matrix_utils.h"
 #include "sputnik/sddmm/cuda_sddmm.h"
+#include "sputnik/test_utils.h"
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/random/random.h"
@@ -71,37 +73,6 @@ class SddmmTest : public ::testing::Test {
   }
 };
 
-void PrintMatrix(const SparseMatrix& matrix) {
-  for (int i = 0; i < matrix.Rows(); ++i) {
-    int col_idx = 0;
-    for (int j = matrix.RowOffsets()[i]; j < matrix.RowOffsets()[i + 1]; ++j) {
-      int next_col_idx = matrix.ColumnIndices()[j];
-
-      while (col_idx < next_col_idx) {
-        std::cout << "0, ";
-        ++col_idx;
-      }
-      std::cout << matrix.Values()[j] << ", ";
-      ++col_idx;
-    }
-    while (col_idx < matrix.Columns()) {
-      std::cout << "0, ";
-      ++col_idx;
-    }
-    std::cout << std::endl;
-  }
-}
-
-void PrintMatrix(const Matrix& matrix) {
-  for (int i = 0; i < matrix.Rows(); ++i) {
-    for (int j = 0; j < matrix.Columns(); ++j) {
-      std::cout << matrix.Values()[i * matrix.Columns() + j] << ", ";
-    }
-    std::cout << std::endl;
-  }
-}
-
-// TODO(tgale): We currently do not support residue in the k or n dimension.
 typedef ::testing::Types<
     Problem<1, 32, 32, 32>,            // Basic functionality
     Problem<1, 64, 32, 32>,            // Issues with multiple k-dim tiles
@@ -116,15 +87,23 @@ typedef ::testing::Types<
     Problem<1024, 512, 1024, 131072>,  // 1k rnn bwd wrt w, bs 512
     Problem<2048, 128, 2048, 1024 * 1024>,          // 2k rnn bwd wrt w, bs 128
     Problem<2048 * 3, 128, 2048, 1024 * 1024 * 3>,  // 2k gru bwd wrt w, bs 128
-    Problem<2048 * 4, 128, 2048, 1024 * 1024 * 4>   // 2k lstm bwd wrt w, bs 128
-    >
+    Problem<2048 * 4, 128, 2048, 1024 * 1024 * 4>>   // 2k lstm bwd wrt w, bs 128
     TestProblems;
 
 TYPED_TEST_SUITE(SddmmTest, TestProblems);
 
-typedef std::function<cudaError_t(int, int, int, int, const int*, const int*,
-                                  const int*, const float*, const float*,
-                                  float*, cudaStream_t)>
+typedef std::function<cudaError_t(
+    int,
+    int,
+    int,
+    int,
+    const int*,
+    const int*,
+    const int*,
+    const float*,
+    const float*,
+    float*,
+    cudaStream_t)>
     SddmmFn;
 
 template <typename Problem>

@@ -54,18 +54,22 @@ cudaError_t CudaSpmm(int m, int k, int n, int nonzeros,
                      const int* __restrict__ row_offsets,
                      const int* __restrict__ column_indices,
                      const float* __restrict__ dense_matrix,
-                     float* __restrict__ output_matrix, cudaStream_t stream);
+                     float* __restrict__ output_matrix,
+                     cudaStream_t stream);
 
 /**
  * @brief Compute the product of a sparse matrix and a dense matrix, add
  * a bias, and apply a ReLU non-linearity.
  */
-cudaError_t CudaSpmmBiasRelu(
-    int m, int k, int n, int nonzeros, const int* __restrict__ row_indices,
-    const float* __restrict__ values, const int* __restrict__ row_offsets,
-    const int* __restrict__ column_indices,
-    const float* __restrict__ dense_matrix, const float* __restrict__ bias,
-    float* __restrict__ output_matrix, cudaStream_t stream);
+cudaError_t CudaSpmmBiasRelu(int m, int k, int n, int nonzeros,
+                             const int* __restrict__ row_indices,
+                             const float* __restrict__ values,
+                             const int* __restrict__ row_offsets,
+                             const int* __restrict__ column_indices,
+                             const float* __restrict__ dense_matrix,
+                             const float* __restrict__ bias,
+                             float* __restrict__ output_matrix,
+                             cudaStream_t stream);
 
 /**
  * @brief Compute the product of a sparse matrix and a dense matrix with
@@ -105,18 +109,22 @@ cudaError_t CudaSpmm(int m, int k, int n, int nonzeros,
                      const int* __restrict__ row_offsets,
                      const short2* __restrict__ column_indices,
                      const half2* __restrict__ dense_matrix,
-                     half2* __restrict__ output_matrix, cudaStream_t stream);
+                     half2* __restrict__ output_matrix,
+                     cudaStream_t stream);
 
 /**
  * @brief Compute the product of a sparse matrix and a dense matrix in
  * half-precision, add a bias, and apply a ReLU non-linearity.
  */
-cudaError_t CudaSpmmBiasRelu(
-    int m, int k, int n, int nonzeros, const int* __restrict__ row_indices,
-    const half2* __restrict__ values, const int* __restrict__ row_offsets,
-    const short2* __restrict__ column_indices,
-    const half2* __restrict__ dense_matrix, const float* __restrict__ bias,
-    half2* __restrict__ output_matrix, cudaStream_t stream);
+cudaError_t CudaSpmmBiasRelu(int m, int k, int n, int nonzeros,
+                             const int* __restrict__ row_indices,
+                             const half2* __restrict__ values,
+                             const int* __restrict__ row_offsets,
+                             const short2* __restrict__ column_indices,
+                             const half2* __restrict__ dense_matrix,
+                             const float* __restrict__ bias,
+                             half2* __restrict__ output_matrix,
+                             cudaStream_t stream);
 
 /**
  * @brief SpMM variant with hyperparameter template arguments exposed.
@@ -158,7 +166,8 @@ cudaError_t CudaSpmmBiasRelu(
  */
 template <typename Config>
 cudaError_t CudaSpmmEx(
-    int m, int k, int n, int nonzeros, const int* __restrict__ row_indices,
+    int m, int k, int n, int nonzeros,
+    const int* __restrict__ row_indices,
     const typename Config::ScalarValue* __restrict__ values,
     const int* __restrict__ row_offsets,
     const typename Config::ScalarIndex* __restrict__ column_indices,

@@ -24,6 +24,8 @@
 #include "sputnik/load_store.h"
 #include "sputnik/tiling_utils.h"
 
+#include "glog/logging.h"
+
 namespace sputnik {
 
 namespace {
@@ -60,25 +62,59 @@ struct DepthwiseKernel {
 
   static constexpr int kVectorWidth = sizeof(MemOp) / sizeof(float);
 
-  typedef FilterTile<kKernelSize, kBlockDimX> FilterTile;
+  typedef FilterTile<
+      kKernelSize,
+      kBlockDimX>
+      FilterTile;
 
-  typedef InputShape<kKernelSize, kPadding, kStride> InputShape;
+  typedef InputShape<
+      kKernelSize,
+      kPadding,
+      kStride>
+      InputShape;
 
-  typedef OutputShape<kKernelSize, kPadding, kStride> OutputShape;
+  typedef OutputShape<
+      kKernelSize,
+      kPadding,
+      kStride>
+      OutputShape;
 
-  typedef WidthPadding<MemOp, kKernelSize, kPadding, kStride, kBlockItemsX>
+  typedef WidthPadding<
+      MemOp,
+      kKernelSize,
+      kPadding,
+      kStride,
+      kBlockItemsX>
       WidthPadding;
 
-  typedef InputTile<MemOp, kKernelSize, kPadding, kStride, kBlockItemsX,
-                    kBlockItemsY, kBlockDimX, kBlockDimY>
+  typedef InputTile<
+      MemOp,
+      kKernelSize,
+      kPadding,
+      kStride,
+      kBlockItemsX,
+      kBlockItemsY,
+      kBlockDimX,
+      kBlockDimY>
       InputTile;
 
-  typedef Computer<MemOp, kKernelSize, kPadding, kStride, kBlockItemsX,
-                   kBlockItemsY, kThreadItemsX, kThreadItemsY>
+  typedef Computer<
+      MemOp,
+      kKernelSize,
+      kPadding,
+      kStride,
+      kBlockItemsX,
+      kBlockItemsY,
+      kThreadItemsX,
+      kThreadItemsY>
       Computer;
 
-  typedef OutputTile<MemOp, kBlockItemsX, kBlockItemsY, kThreadItemsX,
-                     kThreadItemsY>
+  typedef OutputTile<
+      MemOp,
+      kBlockItemsX,
+      kBlockItemsY,
+      kThreadItemsX,
+      kThreadItemsY>
       OutputTile;
 
   // Validate the config.
@@ -327,6 +363,7 @@ cudaError_t CudaDepthwiseEx(int n, int c, int h, int w,
                                           int, int, int, const float*,      \
                                           const float*, float*, cudaStream_t)
 
+#ifdef SPUTNIK_BUILD_TEST
 INSTANTIATE_TILED(CudaDepthwiseEx, 64, 64, 8, 8);
 INSTANTIATE_TILED(CudaDepthwiseEx, 64, 64, 4, 8);
 INSTANTIATE_TILED(CudaDepthwiseEx, 64, 64, 4, 4);
@@ -339,6 +376,7 @@ INSTANTIATE_TILED(CudaDepthwiseEx, 16, 16, 2, 4);
 INSTANTIATE_TILED(CudaDepthwiseEx, 16, 16, 2, 2);
 INSTANTIATE_TILED(CudaDepthwiseEx, 8, 8, 2, 1);
 INSTANTIATE_TILED(CudaDepthwiseEx, 8, 8, 1, 2);
+#endif  // SPUTNIK_BUILD_TEST
 
 #undef INSTANTIATE_TILED
 

@@ -31,7 +31,7 @@ namespace sputnik {
 namespace {
 
 template <typename LoadType, int kBlockItemsY, int kBlockItemsK,
-          int kBlockItemsX, int kBlockWidth, int kPredicateK = true>
+    int kBlockItemsX, int kBlockWidth, int kPredicateK = true>
 __global__ void __launch_bounds__(kBlockItemsY* kBlockWidth)
     CudaSddmmKernel(int m, int k, int n, const int* __restrict__ row_indices,
                     const int* __restrict__ row_offsets,
@@ -219,9 +219,10 @@ cudaError_t CudaSddmmEx(
       int, int, int, int, const int*, const int*, const int*, const float*, \
       const float*, float*, cudaStream_t);
 
-/* k-tile=32, n-tile=32 */
+#ifdef SPUTNIK_BUILD_TEST
 INSTANTIATE_TILED(CudaSddmmEx, float, 1, 32, 32, 32);
 INSTANTIATE_TILED(CudaSddmmEx, float2, 2, 32, 32, 16);
 INSTANTIATE_TILED(CudaSddmmEx, float4, 4, 32, 32, 8);
+#endif  // SPUTNIK_BUILD_TEST
 
 }  // namespace sputnik

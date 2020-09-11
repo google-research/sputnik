@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "sputnik/cuda_utils.h"
+#include "sputnik/test_utils.h"
 #include "sputnik/type_utils.h"
 #include "absl/random/random.h"
 
