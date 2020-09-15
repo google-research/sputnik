@@ -21,7 +21,7 @@
 #include "sputnik/test_utils.h"
 
 #include "absl/random/random.h"
-#include "benchmark/include/benchmark/benchmark.h"
+#include "benchmark/benchmark.h"
 
 namespace sputnik {
 

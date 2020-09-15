@@ -120,8 +120,10 @@ void MakeSparseMatrixRandomUniform(int rows, int columns, int nonzeros,
   CHECK_GE(row_padding, 0) << "Row padding factor must be greater than zero.";
 
   // Generate random values for the matrix.
-  std::vector<ValueType> dense_values(num_elements);
-  for (auto &v : dense_values) v = absl::Uniform<ValueType>(*generator, -1, 1);
+  std::vector<ValueType> nonzero_values(nonzeros);
+  for (auto &v : nonzero_values) {
+    v = absl::Uniform<ValueType>(*generator, -1, 1);
+  }
 
   // Create a uniformly distributed random sparsity mask. We randomly
   // select which values to make zero and then mask them to create the
@@ -129,8 +131,6 @@ void MakeSparseMatrixRandomUniform(int rows, int columns, int nonzeros,
   std::vector<int64_t> indices(num_elements);
   std::iota(indices.begin(), indices.end(), 0);
   std::shuffle(indices.begin(), indices.end(), *generator);
-  int64_t num_zero = num_elements - nonzeros;
-  for (int64_t i = 0; i < num_zero; ++i) dense_values[indices[i]] = 0.0;
 
   // Create the compressed sparse row indices and offsets.
   int64_t offset = 0;
@@ -138,10 +138,11 @@ void MakeSparseMatrixRandomUniform(int rows, int columns, int nonzeros,
   for (int64_t i = 0; i < rows; ++i) {
     for (int64_t j = 0; j < columns; ++j) {
       int64_t idx = i * columns + j;
-      if (dense_values[idx] == 0) continue;
-      values[offset] = dense_values[idx];
-      column_indices[offset] = j;
-      ++offset;
+      if (indices[idx] < nonzeros) {
+        values[offset] = nonzero_values[indices[idx]];
+        column_indices[offset] = j;
+        ++offset;
+      }
     }
 
     // If row_padding is zero, skip this code s.t. we don't mod zero.
