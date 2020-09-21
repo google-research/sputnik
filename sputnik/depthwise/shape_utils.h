@@ -44,7 +44,7 @@ struct ThreadBlock {
   };
 
   template <int kNewBlockDimX>
-  static constexpr __device__ __forceinline__ ThreadIdx Reshape() {
+  static __device__ __forceinline__ ThreadIdx Reshape() {
     // NOTE: We need the dimensions to be powers of two to do this
     // with bitwise ops instead of mod/div. We only need to support
     // a couple of cases.
@@ -52,7 +52,7 @@ struct ThreadBlock {
                   kNewBlockDimX == 4);
     const int kThreadIdx = threadIdx.x + threadIdx.y * kBlockDimX;
 
-    constexpr int kBits = Log2(kNewBlockDimX);
+    const int kBits = Log2(kNewBlockDimX);
     ThreadIdx thread_idx;
     thread_idx.x = kThreadIdx & kBits;
     thread_idx.y = kThreadIdx >> kBits;

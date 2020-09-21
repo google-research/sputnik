@@ -34,8 +34,11 @@ constexpr __host__ __device__ __forceinline__ int DivUp(int x, int y) {
 /**
  * @brief Compute log base 2 statically. Only works when x
  * is a power of 2 and positive.
+ *
+ * TODO(tgale): GCC doesn't like this function being constexpr. Ensure
+ * that this is evaluated statically.
  */
-constexpr __host__ __device__ __forceinline__ int Log2(int x) {
+__host__ __device__ __forceinline__ int Log2(int x) {
   if (x >>= 1) return Log2(x) + 1;
   return 0;
 }
@@ -45,6 +48,13 @@ constexpr __host__ __device__ __forceinline__ int Log2(int x) {
  */
 constexpr __host__ __device__ __forceinline__ int Min(int a, int b) {
   return a < b ? a : b;
+}
+
+/**
+ * @brief Find the maximum statically.
+ */
+constexpr __host__ __device__ __forceinline__ int Max(int a, int b) {
+  return a > b ? a : b;
 }
 
 }  // namespace sputnik

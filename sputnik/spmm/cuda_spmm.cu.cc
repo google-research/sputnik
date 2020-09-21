@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <cmath>
+#include <functional>
 #include <string>
 #include <unordered_map>
 

@@ -166,9 +166,9 @@ struct DepthwiseKernel {
     /// Load the input image tile to shared memory.
     //
     const int kInputOffsetW = blockIdx.x * kBlockItemsX * kStride - kPadding;
-    const int kBaseInputOffsetW = std::max(kInputOffsetW, 0);
+    const int kBaseInputOffsetW = Max(kInputOffsetW, 0);
     const int kInputOffsetH = blockIdx.y * kBlockItemsY * kStride - kPadding;
-    const int kBaseInputOffsetH = std::max(kInputOffsetH, 0);
+    const int kBaseInputOffsetH = Max(kInputOffsetH, 0);
     const int kBaseInputOffset =
         kBaseInputOffsetW + kBaseInputOffsetH * w + blockIdx.z * h * w;
 
@@ -225,15 +225,18 @@ struct DepthwiseKernel {
                              kImageOffset, out);
     output_storer.Store();
   }
-
-  static __global__ void __launch_bounds__(kBlockDimX* kBlockDimY)
-      Launch(int n, int c, int h, int w, const float* __restrict__ in,
-             const float* __restrict__ filters, const float* __restrict__ bias,
-             float* __restrict__ out) {
-    KernelFn(n, c, h, w, in, filters, bias, out);
-  }
 };
 
+template <typename Config>
+__global__ void __launch_bounds__(Config::kBlockDimX * Config::kBlockDimY)
+  Kernel(int n, int c, int h, int w,
+	 const float* __restrict__ in,
+	 const float* __restrict__ filters,
+	 const float* __restrict__ bias,
+	 float* __restrict__ out) {
+  DepthwiseKernel<Config>::KernelFn(n, c, h, w, in, filters, bias, out);
+}
+  
 }  // namespace
 
 constexpr bool DivBy(int x, int y) { return x % y == 0 ? true : false; }
@@ -396,7 +399,7 @@ cudaError_t CudaDepthwiseEx(int n, int c, int h, int w,
   dim3 grid_dim(grid_dim_x, grid_dim_y, n * c);
   dim3 block_dim(Config::kBlockDimX, Config::kBlockDimY);
 
-  DepthwiseKernel<Config>::Launch<<<grid_dim, block_dim, 0, stream>>>(
+  Kernel<Config><<<grid_dim, block_dim, 0, stream>>>(
       n, c, h, w, in, filters, bias, out);
   return cudaGetLastError();
 }

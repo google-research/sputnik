@@ -20,12 +20,14 @@
  * dependent threads.
  */
 
+#include <cstdint>
+
 namespace sputnik {
 
 /**
  * @brief Compute exponents at compile-time.
  */
-constexpr uint32_t StaticPow(uint32_t base, uint32_t exponent) {
+__device__ constexpr uint32_t StaticPow(uint32_t base, uint32_t exponent) {
   return exponent == 0 ? 1 : base * StaticPow(base, exponent - 1);
 }
 
