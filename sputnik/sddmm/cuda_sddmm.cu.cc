@@ -16,6 +16,7 @@
 #include <cmath>
 
 #include "sputnik/barrier.h"
+#include "sputnik/common.h"
 #include "sputnik/cuda_utils.h"
 #include "sputnik/load_store.h"
 #include "sputnik/sddmm/all_reduce.h"
@@ -69,7 +70,7 @@ __global__ void __launch_bounds__(kBlockItemsY* kBlockWidth)
 
   // Calculate the number of nonzeros that this thread block processes and
   // substract the x-dim thread index to simplify loop bounds checks.
-  nonzeros = min(nonzeros - n_index, kBlockItemsX) - threadIdx.x;
+  nonzeros = Min(nonzeros - n_index, kBlockItemsX) - threadIdx.x;
 
   // Shared memory tile for the lhs dense matrix values.
   float lhs_fragment[kBlockItemsK / kBlockWidth];
