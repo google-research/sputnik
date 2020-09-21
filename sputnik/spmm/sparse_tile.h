@@ -164,8 +164,7 @@ struct SparseTile {
     // scalar ops.
     constexpr int kResidueUpdateStride =
         -1 * static_cast<int>(sizeof(ScalarValue)) * (kValuesPerLoad_ - 1);
-    const int kResidueUpdate = static_cast<int>(threadIdx.x) *
-        kResidueUpdateStride;
+    const int kResidueUpdate = threadIdx.x * kResidueUpdateStride;
 
     const ScalarValue *values =
         OffsetCast<const ScalarValue>(values_, kResidueUpdate);

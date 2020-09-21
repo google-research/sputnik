@@ -15,8 +15,6 @@
 #ifndef THIRD_PARTY_SPUTNIK_DEPTHWISE_INPUT_TILE_H_
 #define THIRD_PARTY_SPUTNIK_DEPTHWISE_INPUT_TILE_H_
 
-#include <cstdint>
-
 #include "sputnik/common.h"
 #include "sputnik/depthwise/width_padding.h"
 #include "sputnik/load_store.h"

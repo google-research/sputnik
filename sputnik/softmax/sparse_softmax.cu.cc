@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cmath>
+#include <limits>
 
 #include "sputnik/load_store.h"
 #include "sputnik/softmax/sparse_softmax.h"
@@ -39,7 +39,7 @@ __global__ void SparseSoftmaxKernel(int m, int n,
 
   // Step 1: Find the maximum value in our row.
   const float* in = values + row_offset;
-  float max = -INFINITY;
+  float max = -std::numeric_limits<float>::infinity();
   for (int idx = threadIdx.x; idx < nonzeros; idx += blockDim.x) {
     float x = Load(in + idx);
     max = x > max ? x : max;

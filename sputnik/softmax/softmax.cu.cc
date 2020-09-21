@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cmath>
+#include <limits>
 
 #include "sputnik/load_store.h"
 #include "sputnik/softmax/softmax.h"
@@ -29,7 +29,7 @@ __global__ void SoftmaxKernel(int m, int n, const float* __restrict__ input,
 
   // Step 1: Find the maximum value in our row.
   const float* in = input + m_index * n;
-  float max = -INFINITY;
+  float max = -std::numeric_limits<float>::infinity();
   for (int idx = threadIdx.x; idx < n; idx += blockDim.x) {
     float x = Load(in + idx);
     max = x > max ? x : max;
