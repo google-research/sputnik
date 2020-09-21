@@ -39,6 +39,5 @@ endif()
 # Conditionally gather the benchmark sources.
 if (BUILD_BENCHMARK)
   file(GLOB TMP *_benchmark.cu.cc)
-  list(FILTER TMP EXCLUDE REGEX "dlmc")
   set(SPUTNIK_SDDMM_BENCHMARK_SRCS ${SPUTNIK_SDDMM_BENCHMARK_SRCS} ${TMP} PARENT_SCOPE)
 endif()

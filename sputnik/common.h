@@ -50,6 +50,13 @@ constexpr __host__ __device__ __forceinline__ int Min(int a, int b) {
   return a < b ? a : b;
 }
 
+/**
+ * @brief Find the maximum statically.
+ */
+constexpr __host__ __device__ __forceinline__ int Max(int a, int b) {
+  return a > b ? a : b;
+}
+
 }  // namespace sputnik
 
 #endif  // THIRD_PARTY_SPUTNIK_COMMON_H_
