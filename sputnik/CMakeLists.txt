@@ -13,8 +13,9 @@ set(SPUTNIK_DEPTHWISE_TEST_SRCS)
 set(SPUTNIK_DEPTHWISE_BENCHMARK_SRCS)
 add_subdirectory(depthwise)
 
-add_subdirectory(softmax)
 add_subdirectory(bias_relu)
+add_subdirectory(softmax)
+add_subdirectory(utils)
 
 set(DIR_SRCS)
 
@@ -57,6 +58,20 @@ set_source_files_properties(${SPUTNIK_CUDA_SRCS} PROPERTIES LANGUAGE CUDA)
 # Create libsputnik.
 add_library(sputnik SHARED ${SPUTNIK_SRCS})
 target_link_libraries(sputnik ${SPUTNIK_LIBS})
+
+# Library installation.
+install(TARGETS sputnik)
+
+set(INSTALL_BASE "include/sputnik")
+install(FILES "cuda_utils.h" DESTINATION ${INSTALL_BASE})
+install(FILES "sputnik.h" DESTINATION ${INSTALL_BASE})
+install(FILES "bias_relu/bias_relu.h" DESTINATION "${INSTALL_BASE}/bias_relu")
+install(FILES "depthwise/cuda_depthwise.h" DESTINATION "${INSTALL_BASE}/depthwise")
+install(FILES "spmm/cuda_spmm.h" DESTINATION "${INSTALL_BASE}/spmm")
+install(FILES "sddmm/cuda_sddmm.h" DESTINATION "${INSTALL_BASE}/sddmm")
+install(FILES "softmax/softmax.h" DESTINATION "${INSTALL_BASE}/softmax")
+install(FILES "softmax/sparse_softmax.h" DESTINATION "${INSTALL_BASE}/softmax")
+install(FILES "utils/index_format.h" DESTINATION "${INSTALL_BASE}/utils")
 
 # Optionally build the test suite.
 if (BUILD_TEST)
