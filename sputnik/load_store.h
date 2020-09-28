@@ -19,12 +19,13 @@
  * @file @brief Defines utilities for loading and storing data.
  */
 
+#include <cstring>
 #include "sputnik/cuda_utils.h"
 
 namespace sputnik {
 
 template <class To, class From>
-constexpr __device__ __forceinline__ To BitCast(const From& src) noexcept {
+__device__ __forceinline__ To BitCast(const From& src) noexcept {
   To dst;
   std::memcpy(&dst, &src, sizeof(To));
   return dst;

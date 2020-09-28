@@ -39,11 +39,9 @@ struct WidthPadding {
   // Helper to calculate the input shape from the output tile size.
   typedef InputShape<kKernelSize, kPadding, kStride> InputShape;
 
-  static constexpr int Get() {
-    constexpr int kBaseOffset =
-        InputShape::NoPad(kBlockItemsX) + kVectorWidth - 1;
-    constexpr int kRoundedBase = RoundUpTo(kBaseOffset, kVectorWidth);
-    return kRoundedBase - kBlockItemsX;
+  static __host__ __device__ __forceinline__ constexpr int Get() {
+    return RoundUpTo(InputShape::NoPad(kBlockItemsX) + kVectorWidth - 1,
+		     kVectorWidth) - kBlockItemsX;
   }
 };
 

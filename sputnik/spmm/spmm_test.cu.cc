@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <cmath>
+#include <functional>
 
 #include "sputnik/cuda_utils.h"
 #include "sputnik/matrix_utils.h"
