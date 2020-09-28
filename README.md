@@ -26,5 +26,20 @@ To launch the container with the sputnik source mounted under `/mount` (assuming
 
 `sudo docker run --runtime=nvidia -v ~/:/mount/ -it sputnik-dev:latest`
 
+## Citation
+
+If you make use of this library, please cite:
+
+```
+@inproceedings{sgk_sc2020,
+  author    = {Trevor Gale and Matei Zaharia and Cliff Young and Erich Elsen},
+  title     = {Sparse {GPU} Kernels for Deep Learning},
+  booktitle = {Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis, {SC} 2020},
+  year      = {2020},
+}
+```
+
+The sparse models and dataset of sparse matrices from deep neural networks from the above paper can be found [here](https://github.com/google-research/google-research/tree/master/sgk).
+
 ## Disclaimer
 This is not an official Google product.
