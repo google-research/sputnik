@@ -67,6 +67,76 @@ __global__ void ConvertKernel(const short2 *in, int *out_i, int n) {
   out[idx] = b;
 }
 
+/**
+ * @brief Create a dense matrix with randomly sampled values.
+ *
+ * @param rows The number of rows in the matrix.
+ * @param columns The number of columns in the matrix.
+ * @param Buffer allocated to store the dense matirx.
+ */
+template <typename ValueType>
+void MakeDenseMatrix(int rows, int columns, ValueType *matrix,
+                     absl::BitGen *generator) {
+  // Generate random values for the matrix.
+  for (int64_t i = 0; i < static_cast<int64_t>(rows) * columns; ++i) {
+    matrix[i] = absl::Uniform<ValueType>(*generator, -1, 1);
+  }
+}
+
+void PadSparseMatrix(const std::vector<int> &row_offsets,
+                     const std::vector<float> &values,
+                     const std::vector<int> &column_indices, int row_padding,
+                     std::vector<int> *row_offsets_out,
+                     std::vector<float> *values_out,
+                     std::vector<int> *column_indices_out) {
+  CHECK_GE(row_padding, 0) << "Row padding factor must be greater than zero.";
+  if (row_padding < 2) {
+    // For row padding to the nearest 1 element, copy the input to the
+    // output and return early. We also execute this code path for
+    // `row_padding` == 0, which indicates no padding is to be added.
+    row_offsets_out->assign(row_offsets.begin(), row_offsets.end());
+    values_out->assign(values.begin(), values.end());
+    column_indices_out->assign(column_indices.begin(), column_indices.end());
+    return;
+  }
+  row_offsets_out->push_back(0);
+
+  int offset = 0;
+  for (int i = 0; i < row_offsets.size() - 1; ++i) {
+    // Copy the existing values and column indices for this row to
+    // the output.
+    int row_length = row_offsets[i + 1] - row_offsets[i];
+    values_out->resize(values_out->size() + row_length);
+    column_indices_out->resize(column_indices_out->size() + row_length);
+    std::copy(values.begin() + row_offsets[i],
+              values.begin() + row_offsets[i + 1],
+              values_out->begin() + offset);
+    std::copy(column_indices.begin() + row_offsets[i],
+              column_indices.begin() + row_offsets[i + 1],
+              column_indices_out->begin() + offset);
+    offset += row_length;
+
+    // Calculate the number of zeros that need to be inserted in
+    // this row to reach the desired padding factor.
+    int residue = offset % row_padding;
+    int to_add = (row_padding - residue) % row_padding;
+    for (; to_add > 0; --to_add) {
+      values_out->push_back(0.0);
+
+      // NOTE: When we pad with zeros the column index that we assign
+      // the phantom zero needs to be a valid column index s.t. we
+      // don't index out-of-range into the dense rhs matrix when
+      // computing spmm. Here we set all padding column-offsets to
+      // the same column as the final non-padding weight in the row.
+      column_indices_out->push_back(column_indices_out->back());
+      ++offset;
+    }
+    row_offsets_out->push_back(offset);
+  }
+}
+
+}  // namespace
+
 template <typename In, typename Out>
 cudaError_t Convert(const In *in, Out *out, int n) {
   if (n == 0) return cudaSuccess;
@@ -78,10 +148,12 @@ cudaError_t Convert(const In *in, Out *out, int n) {
   return cudaGetLastError();
 }
 
+template<>
 cudaError_t Convert(const float *in, float *out, int n) {
   return cudaMemcpy(out, in, n * sizeof(float), cudaMemcpyDeviceToDevice);
 }
 
+template<>
 cudaError_t Convert(const int *in, int *out, int n) {
   return cudaMemcpy(out, in, n * sizeof(int), cudaMemcpyDeviceToDevice);
 }
@@ -109,7 +181,7 @@ void MakeSparseMatrixRandomUniform(int rows, int columns, int nonzeros,
                                    ValueType *values, IndexType *row_offsets,
                                    IndexType *column_indices,
                                    absl::BitGen *generator,
-                                   int row_padding = 4) {
+                                   int row_padding) {
   // The number of elements in the dense version of the matrix.
   int64_t num_elements = static_cast<int64_t>(rows) * columns;
 
@@ -222,76 +294,6 @@ void MakeSparseMatrixPerfectUniform(int rows, int columns, int nonzeros_per_row,
     offset += nonzeros_per_row;
   }
 }
-
-/**
- * @brief Create a dense matrix with randomly sampled values.
- *
- * @param rows The number of rows in the matrix.
- * @param columns The number of columns in the matrix.
- * @param Buffer allocated to store the dense matirx.
- */
-template <typename ValueType>
-void MakeDenseMatrix(int rows, int columns, ValueType *matrix,
-                     absl::BitGen *generator) {
-  // Generate random values for the matrix.
-  for (int64_t i = 0; i < static_cast<int64_t>(rows) * columns; ++i) {
-    matrix[i] = absl::Uniform<ValueType>(*generator, -1, 1);
-  }
-}
-
-void PadSparseMatrix(const std::vector<int> &row_offsets,
-                     const std::vector<float> &values,
-                     const std::vector<int> &column_indices, int row_padding,
-                     std::vector<int> *row_offsets_out,
-                     std::vector<float> *values_out,
-                     std::vector<int> *column_indices_out) {
-  CHECK_GE(row_padding, 0) << "Row padding factor must be greater than zero.";
-  if (row_padding < 2) {
-    // For row padding to the nearest 1 element, copy the input to the
-    // output and return early. We also execute this code path for
-    // `row_padding` == 0, which indicates no padding is to be added.
-    row_offsets_out->assign(row_offsets.begin(), row_offsets.end());
-    values_out->assign(values.begin(), values.end());
-    column_indices_out->assign(column_indices.begin(), column_indices.end());
-    return;
-  }
-  row_offsets_out->push_back(0);
-
-  int offset = 0;
-  for (int i = 0; i < row_offsets.size() - 1; ++i) {
-    // Copy the existing values and column indices for this row to
-    // the output.
-    int row_length = row_offsets[i + 1] - row_offsets[i];
-    values_out->resize(values_out->size() + row_length);
-    column_indices_out->resize(column_indices_out->size() + row_length);
-    std::copy(values.begin() + row_offsets[i],
-              values.begin() + row_offsets[i + 1],
-              values_out->begin() + offset);
-    std::copy(column_indices.begin() + row_offsets[i],
-              column_indices.begin() + row_offsets[i + 1],
-              column_indices_out->begin() + offset);
-    offset += row_length;
-
-    // Calculate the number of zeros that need to be inserted in
-    // this row to reach the desired padding factor.
-    int residue = offset % row_padding;
-    int to_add = (row_padding - residue) % row_padding;
-    for (; to_add > 0; --to_add) {
-      values_out->push_back(0.0);
-
-      // NOTE: When we pad with zeros the column index that we assign
-      // the phantom zero needs to be a valid column index s.t. we
-      // don't index out-of-range into the dense rhs matrix when
-      // computing spmm. Here we set all padding column-offsets to
-      // the same column as the final non-padding weight in the row.
-      column_indices_out->push_back(column_indices_out->back());
-      ++offset;
-    }
-    row_offsets_out->push_back(offset);
-  }
-}
-
-}  // namespace
 
 void IdentityRowSwizzle(int rows, const int * /* unused */, int *row_indices) {
   std::iota(row_indices, row_indices + rows, 0);

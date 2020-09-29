@@ -145,6 +145,20 @@ __device__ __forceinline__ void Convert(const short2 *x, int *out) {
   out[1] = static_cast<int>(x->y);
 }
 
+__device__ __forceinline__ void Convert(const short4 *x, int *out) {
+  Convert(&x->x, out);
+  Convert(&x->y, out + 2);
+}
+
+__device__ __forceinline__ void Convert(const short2 x, int *out) {
+  Convert(&x, out);
+}
+
+__device__ __forceinline__ void Convert(short4 x, int *out) {
+  Convert(&x.x, out);
+  Convert(&x.y, out + 2);
+}
+
 __device__ __forceinline__ void Convert(const half2 *x, float *out) {
   // Extract two 16-bit IEEE floating-point values into two 32-bit
   // IEEE floating-point values. Useful for pseudo-fp16 kernels.

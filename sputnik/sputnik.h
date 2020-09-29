@@ -23,4 +23,5 @@
 #include "sputnik/spmm/cuda_spmm.h"
 #include "sputnik/utils/index_format.h"
 
+
 #endif  // THIRD_PARTY_SPUTNIK_SPUTNIK_H_

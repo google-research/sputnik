@@ -30,6 +30,28 @@
 namespace sputnik {
 
 /**
+ * @brief Type conversion utilities.
+ */
+template <typename In, typename Out>
+cudaError_t Convert(const In *in, Out *out, int n);
+
+/**
+ * @brief Matrix creation utilities.
+ */
+template <typename ValueType, typename IndexType>
+void MakeSparseMatrixRandomUniform(int rows, int columns, int nonzeros,
+                                   ValueType *values, IndexType *row_offsets,
+                                   IndexType *column_indices,
+                                   absl::BitGen *generator,
+                                   int row_padding = 4);
+
+template <typename ValueType, typename IndexType>
+void MakeSparseMatrixPerfectUniform(int rows, int columns, int nonzeros_per_row,
+                                    ValueType *values, IndexType *row_offsets,
+                                    IndexType *column_indices,
+                                    absl::BitGen *generator);
+
+/**
  * @brief Create a row swizzle that maps thread blocks to rows in order.
  */
 void IdentityRowSwizzle(int rows, const int* row_offsets, int* row_indices);
@@ -149,7 +171,19 @@ class SparseMatrix {
 
   Swizzle RowSwizzle() const { return row_swizzle_; }
 
- private:
+ protected:
+  SparseMatrix() : values_(nullptr),
+                   row_offsets_(nullptr),
+                   column_indices_(nullptr),
+                   row_indices_(nullptr),
+                   rows_(0),
+                   columns_(0),
+                   nonzeros_(0),
+                   pad_rows_to_(0),
+                   num_elements_with_padding_(0),
+                   weight_distribution_(RANDOM_UNIFORM),
+                   row_swizzle_(IDENTITY) {}
+
   // Matrix value and index storage.
   float* values_;
   int* row_offsets_;
@@ -245,7 +279,19 @@ class CudaSparseMatrix {
 
   Swizzle RowSwizzle() const { return row_swizzle_; }
 
- private:
+ protected:
+  CudaSparseMatrix() : values_(nullptr),
+                       row_offsets_(nullptr),
+                       column_indices_(nullptr),
+                       row_indices_(nullptr),
+                       rows_(0),
+                       columns_(0),
+                       nonzeros_(0),
+                       pad_rows_to_(0),
+                       num_elements_with_padding_(0),
+                       weight_distribution_(RANDOM_UNIFORM),
+                       row_swizzle_(IDENTITY) {}
+
   // Matrix value and index storage.
   Value* values_;
   int* row_offsets_;
@@ -302,7 +348,7 @@ class Matrix {
 
   int Columns() const { return columns_; }
 
- private:
+ protected:
   // Matrix value storage.
   float* values_;
 
@@ -346,7 +392,7 @@ class CudaMatrix {
 
   int Columns() const { return columns_; }
 
- private:
+ protected:
   // Matrix value storage.
   Value* values_;
 
