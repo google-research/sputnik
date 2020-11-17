@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.13)
 
 project(SPUTNIK CUDA CXX C)
 
-cmake_policy(SET CMP0104 OLD)
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18")
+  # This cmakefiles allow cmake >= 3.13 but the policy is only introduced in cmake 3.18
+  cmake_policy(SET CMP0104 OLD)
+endif ()
 
 ##
 ### Build options.
