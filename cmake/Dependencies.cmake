@@ -8,7 +8,7 @@ list(APPEND SPUTNIK_LIBS "cudart_static;cublas_static;cusparse_static;culibos;cu
 
 # Google Glog.
 find_package(Glog REQUIRED)
-list(APPEND SPUTNIK_LIBS ${GLOG_LIBRARIES})
+list(APPEND SPUTNIK_LIBS ${GLOG_LIBRARIES} ${GFLAGS_LIBRARY})
 
 if (BUILD_TEST)
   # Google Abseil.
